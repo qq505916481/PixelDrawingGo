@@ -8,5 +8,5 @@ Offical [link](http://live.bilibili.com/pages/1702/pixel-drawing)
 This is a pen
 
 ## Third-party libraries used
-[httpcomponents-client-4.5.x](http://hc.apache.org/httpcomponents-client-4.5.x/index.html)
-[JSON-java](https://github.com/stleary/JSON-java)
+* [httpcomponents-client-4.5.x](http://hc.apache.org/httpcomponents-client-4.5.x/index.html)
+* [JSON-java](https://github.com/stleary/JSON-java)
