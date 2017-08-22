@@ -15,14 +15,14 @@ public class PixelDrawingGo {
 	//public static String[] cookies = {"sid=4v7c5r0u; fts=1499662552; UM_distinctid=15d2add0dc027e-02a686c7de1368-333f5902-1fa400-15d2add0dc1af5; buvid3=B407E6A8-4B1C-4115-8534-290AE8EBD33537233infoc; pgv_pvi=8638030848; rpdid=kmpssiqlkidopllxxksqw; biliMzIsnew=1; biliMzTs=0; finger=edc6ecda; LIVE_BUVID=4966d78c3400745cf2bda9595235effe; LIVE_BUVID__ckMd5=b238ef1769c480ec; Hm_lvt_8a6e55dbd2870f0f5bc9194cddf32a02=1501300369,1501321878,1501321883,1502290543; _cnt_pm=0; _cnt_notify=4; DedeUserID=8742966; DedeUserID__ckMd5=5f5f90e71ea35d9f; SESSDATA=38240fb3%2C1505206502%2Cea58f457; bili_jct=65dfef502edb4afbc52e85e0870a2cc2; _dfcaptcha=eda8d74c04559fd5e71daa8971788c45"};
 	public static String userAgent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36";
 	
-	private static StringBuilder imgJson = new StringBuilder();
+
 	//private static boolean initialized = false; //第一次循环
 	public final static int dozeTime = 180; //冷却时间
 	public final static int minTime = 5; //错误冷却时间
 	public final static int cpuCores = Runtime.getRuntime().availableProcessors();
 	
 	private static ExecutorService checkThreadPool;
-	private static CountDownLatch cdl = new CountDownLatch(cpuCores);
+	private CountDownLatch cdl = new CountDownLatch(cpuCores);
 	
 	private static Vector<String> failedMark = new Vector<>();
 	private static BitmapParser bp = new BitmapParser();
@@ -33,7 +33,7 @@ public class PixelDrawingGo {
 	//public static String key; //象素点全局指针
 	
 	public static JSONObject json;
-	public static Iterator<String> it;
+	private static Iterator<String> it;
 	
 	private static int start_x;
 	private static int start_y;
@@ -56,10 +56,10 @@ public class PixelDrawingGo {
 			e.printStackTrace();
 			System.out.println("上面的异常说明你没有按照约定输入参数,这通常会导致你从直接画板的左上角开始绘制(然后把别人的画覆盖 \n 建议你使用: java -jar test.jar [起始横坐标] [起始纵坐标] , \n 列如 java -jar test.jar 1250 700      (画板尺寸1279 x 719) \n ============================== \n 以下为debug日志,可以不看");
 		}
-		go();
+		new PixelDrawingGo().go();
 	}
 
-	public static void getCookieLines(String file) throws Exception {
+	public void getCookieLines(String file) throws Exception {
 		Vector<String> vec = new Vector<>();
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(file));
@@ -87,21 +87,24 @@ public class PixelDrawingGo {
 		}
 	}
 	
-	public static void getImgJson(String file) {
+	public String getImgJson(String file) {
+		// 不抛出异常是因为如果是空的之后实列化JSONObject肯定会报错
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(file));
+			StringBuilder sb = new StringBuilder();
 			String s;
 			while((s = br.readLine()) != null) {
-				imgJson.append(s);
+				sb.append(s);
 			}
 			br.close();
-			
+			return sb.toString();
 		} catch(Exception e) {
 			e.printStackTrace();
+			return null;
 		}
 	}
 
-	public static void go() {
+	public void go() {
 		try {
 			getCookieLines("cookies.txt");
 		} catch (Exception e2) {
@@ -110,8 +113,8 @@ public class PixelDrawingGo {
 			// exit
 			System.exit(-233);
 		}
-		getImgJson("test.json");
-		json = new JSONObject(imgJson.toString());
+
+		json = new JSONObject(getImgJson("test.json"));
 		it = json.keys();
 		System.out.println("欢迎使用PixelDrawingGo, 初始化...");
 		do {
@@ -255,7 +258,7 @@ public class PixelDrawingGo {
 		
 	}
 
-	public static void checkThreadsGo() {
+	public void checkThreadsGo() {
 		checkThreadPool = Executors.newFixedThreadPool(cpuCores);
 		for(int i = 0; i < cpuCores; i++) {
 			checkThreadPool.execute(new Runnable() {
@@ -303,11 +306,11 @@ public class PixelDrawingGo {
 		}
 	}
 	
-	public static synchronized String keySelect(Boolean isClean) { //同步防止异常
+	public synchronized String keySelect(Boolean isClean) { //同步防止异常
 		if(it.hasNext()) { //isClean
 			return it.next();
 		} else if(!failedMark.isEmpty() && isClean) {
-			System.out.println("最后统计"+failedMark.lastElement());
+			System.out.println("最后统计"+failedMark.size()); // 还是换成打印矢量集的大小比较直观
 			String key = failedMark.lastElement();
 			failedMark.removeElement(key);
 			return key;
