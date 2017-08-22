@@ -21,6 +21,7 @@ public class PixelDrawingGo {
 	public final static int minTime = 5; //错误冷却时间
 	public final static int cpuCores = Runtime.getRuntime().availableProcessors();
 	
+	private static Thread[] threads;
 	private static ExecutorService checkThreadPool;
 	private CountDownLatch cdl = new CountDownLatch(cpuCores);
 	
@@ -34,6 +35,13 @@ public class PixelDrawingGo {
 	
 	public static JSONObject json;
 	private static Iterator<String> it;
+	
+	// 颇有节日气氛
+	private final static int maxOreos = 5;
+	private final static int oreosRemain = 5;
+	private static volatile int oreoCount = 0;
+	private static volatile boolean oreoIsRunning; // 是否运行过orea方法
+	
 	
 	private static int start_x;
 	private static int start_y;
@@ -104,7 +112,9 @@ public class PixelDrawingGo {
 		}
 	}
 
+	// 将在以后转成构造方法
 	public void go() {
+		oreoIsRunning = false;
 		try {
 			getCookieLines("cookies.txt");
 		} catch (Exception e2) {
@@ -125,7 +135,7 @@ public class PixelDrawingGo {
 		// 一股子面向过程的味道
 		checkThreadsGo();
 		
-		Thread threads[] = new Thread[cookies.length];
+		threads = new Thread[cookies.length];
 		for(int j = 0; j < cookies.length; j++) {
 			final int jb = j; 
 			threads[jb] = new Thread(new Runnable() {
@@ -158,7 +168,7 @@ public class PixelDrawingGo {
 					*	System.out.println("初始化完成");
 					*}
 					*/
-					while(true) {
+					while(!oreoIsRunning) {
 						//if(it.hasNext() || (!failedMark.isEmpty() && isClean)) {
 						if(lastresult == 0 || !isClean) { //成功后才进行下一个点绘制,否则继续之前的, 并且在clean模式开启之前保持生效
 							key = keySelect(isClean);
@@ -180,6 +190,12 @@ public class PixelDrawingGo {
 							if(color2.equals(color)) {
 								System.out.println("看来这个点已经被人填上相同的颜色了, 跳过");
 								lastresult = 0;
+								oreoCount++;
+								if(oreoCount >= maxOreos && failedMark.size() >= oreosRemain) {
+									oreaRestart(); // 下个轮回开始后,它也就死了
+									System.out.println("My work has been completed, now I will go die");
+									break;
+								}
 								continue;
 							}
 							
@@ -237,6 +253,8 @@ public class PixelDrawingGo {
 						}
 						
 					}
+					
+					System.out.println(Thread.currentThread().getName() + "暴力线程结束");
 				}
 				
 			});
@@ -318,4 +336,34 @@ public class PixelDrawingGo {
 			return null;
 		}
 	}
+
+	private synchronized void oreaRestart() {
+		if(oreoIsRunning == true)return;
+		
+		System.out.println("相同次数超过阈值, 重启...");
+		
+		oreoIsRunning = true;
+		// Initialize
+		oreoCount = 0;
+		cdl = new CountDownLatch(cpuCores);
+		failedMark.clear(); // 爆走线程: GG
+		// bitmapDataCache = null; 可加可不加
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				// TODO 自动生成的方法存根
+				for(Thread t : threads) {
+					while(t.isAlive()) {
+						
+					}
+				}
+				System.out.println("热重启完成");
+				go();
+			}
+			
+		}).start();
+		
+	}
+
 }
