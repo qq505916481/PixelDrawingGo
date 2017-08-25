@@ -192,7 +192,7 @@ public class PixelDrawingGo {
 								lastresult = 0;
 								oreoCount++;
 								if(oreoCount >= maxOreos && failedMark.size() >= oreosRemain) {
-									oreaRestart(); // 下个轮回开始后,它也就死了
+									oreoRestart(); // 下个轮回开始后,它也就死了
 									System.out.println("My work has been completed, now I will go die");
 									break;
 								}
@@ -212,7 +212,13 @@ public class PixelDrawingGo {
 								
 								//failedMark.remove(key);
 								
-								if(failedMark.isEmpty()) { //如果空了,直接下一循坏结束
+								if(failedMark.isEmpty() && !oreoIsRunning) { //如果空了,直接下一循坏结束, 并安全关闭其他相同线程
+									// 双保险
+									oreoIsRunning = true;
+									for(Thread t : threads) {
+										if(t == Thread.currentThread()) continue;
+										t.interrupt();
+									}
 									continue;
 								}
 								
@@ -221,6 +227,7 @@ public class PixelDrawingGo {
 									Thread.sleep(dozeTime*1000);
 								} catch(InterruptedException e) {
 									e.printStackTrace();
+									break;
 								}
 								
 							} else if(lastresult == -400) {
@@ -337,7 +344,7 @@ public class PixelDrawingGo {
 		}
 	}
 
-	private synchronized void oreaRestart() {
+	private synchronized void oreoRestart() {
 		if(oreoIsRunning == true)return;
 		
 		System.out.println("相同次数超过阈值, 重启...");
