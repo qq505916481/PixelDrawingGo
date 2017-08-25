@@ -355,22 +355,14 @@ public class PixelDrawingGo {
 		cdl = new CountDownLatch(cpuCores);
 		failedMark.clear(); // 爆走线程: GG
 		// bitmapDataCache = null; 可加可不加
-		new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				// TODO 自动生成的方法存根
-				for(Thread t : threads) {
-					while(t.isAlive()) {
-						
-					}
-				}
-				System.out.println("热重启完成");
-				go();
+		new Thread(() -> {
+			for(Thread t : threads) {
+				t.interrupt();
+				while(t.isAlive()) {}
 			}
-			
+			System.out.println("热重启完成");
+			go();
 		}).start();
-		
 	}
 
 }
